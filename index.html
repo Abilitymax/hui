@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>文慧个人小站</title>
+    <style>
+        :root {
+            --theme: #ff7eb9;
+            --theme-light: #ffa8d2;
+            --glass: rgba(255,255,255,.15);
+            --blur: 20px;
+            --radius: 20px;
+            --shadow: 0 8px 32px rgba(0,0,0,.3);
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+            background:url('https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=1080&q=80') center/cover fixed;
+            color:#fff;min-height:100vh;overflow-x:hidden;
+        }
+        /* 密码弹窗 */
+        #passwordModal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+        .password-box{width:90%;max-width:340px;background:var(--glass);backdrop-filter:blur(var(--blur));border-radius:var(--radius);box-shadow:var(--shadow);padding:40px 30px;text-align:center}
+        .password-input{width:100%;padding:14px 20px;border:none;border-radius:25px;background:rgba(255,255,255,.2);color:#fff;font-size:16px;text-align:center;margin-bottom:15px}
+        .password-btn{width:100%;padding:14px 0;border:none;border-radius:25px;background:linear-gradient(45deg,var(--theme),var(--theme-light));color:#fff;font-size:16px;font-weight:600}
+        /* 导航 */
+        nav{position:fixed;top:0;left:0;right:0;background:var(--glass);backdrop-filter:blur(var(--blur));display:flex;justify-content:center;gap:20px;padding:12px 0;z-index:99}
+        nav a{color:#fff;text-decoration:none;font-size:14px;padding:6px 12px;border-radius:15px}
+        nav a.active{background:var(--glass)}
+        /* 卡片 */
+        section{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:80px 20px 40px}
+        .card{width:90%;max-width:420px;background:var(--glass);backdrop-filter:blur(var(--blur));border-radius:var(--radius);box-shadow:var(--shadow);padding:30px 25px}
+        h2{font-size:26px;margin-bottom:20px;text-align:center}
+        /* 首页 */
+        #home .avatar{width:100px;height:100px;margin:0 auto 20px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--theme),var(--theme-light))}
+        #home .avatar img{width:100%;height:100%;object-fit:cover}
+        #home h1{font-size:28px;margin-bottom:6px}
+        #home .birthday{font-size:16px;opacity:.8;margin-bottom:15px}
+        #home .hobby{font-size:20px;font-weight:600;background:linear-gradient(45deg,var(--theme),var(--theme-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        /* 音乐 */
+        .song-list{list-style:none}
+        .song-list li{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+        .cover{width:50px;height:50px;border-radius:8px;background:var(--theme);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+        .song-info{flex:1;text-align:left}
+        .song-name{font-size:15px;font-weight:600}
+        .song-artist{font-size:13px;opacity:.7}
+        .play-btn{width:36px;height:36px;border:none;border-radius:50%;background:var(--theme);color:#fff;font-size:16px}
+        /* 照片墙 */
+        .gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+        .gallery img{width:100%;aspect-ratio:1;border-radius:12px;object-fit:cover}
+        /* 时间轴 */
+        .timeline{position:relative;padding-left:20px}
+        .timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--theme)}
+        .event{position:relative;margin-bottom:20px;padding-left:25px;text-align:left}
+        .event::before{content:'';position:absolute;left:-4px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--theme)}
+        .event-date{font-size:13px;opacity:.7}
+        .event-desc{font-size:15px;margin-top:4px}
+        /* 留言板 */
+        #guestbook textarea{width:100%;height:100px;padding:12px;border:none;border-radius:var(--radius);background:rgba(255,255,255,.2);color:#fff;font-size:15px;resize:none}
+        #guestbook button{margin-top:15px;width:100%;padding:12px 0;border:none;border-radius:20px;background:linear-gradient(45deg,var(--theme),var(--theme-light));color:#fff;font-size:15px;font-weight:600}
+        #messages{margin-top:20px;text-align:left;max-height:200px;overflow-y:auto}
+        #messages p{font-size:14px;margin-bottom:8px;padding:8px 12px;background:rgba(255,255,255,.1);border-radius:12px}
+        /* 底部播放器 */
+        .player-bar{position:fixed;bottom:0;left:0;right:0;background:var(--glass);backdrop-filter:blur(var(--blur));display:flex;align-items:center;gap:12px;padding:8px 15px;font-size:14px;z-index:100}
+        .player-bar button{border:none;background:transparent;color:#fff;font-size:18px}
+        .progress{flex:1;height:4px;background:rgba(255,255,255,.3);border-radius:2px;overflow:hidden;cursor:pointer;position:relative}
+        .progress-bar{height:100%;background:var(--theme);width:0}
+    </style>
+</head>
+<body>
+    <!-- 密码弹窗 -->
+    <div id="passwordModal">
+        <div class="password-box">
+            <h2>文慧的小站</h2>
+            <p>请输入密码进入</p>
+            <input type="password" id="passwordInput" maxlength="20" placeholder="请输入密码">
+            <button class="password-btn" onclick="checkPassword()">进入</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 导航 -->
+        <nav>
+            <a href="#home" class="active">首页</a>
+            <a href="#music">音乐</a>
+            <a href="#gallery">照片</a>
+            <a href="#timeline">回忆</a>
+            <a href="#guestbook">留言</a>
+        </nav>
+
+        <!-- 首页 -->
+        <section id="home">
+            <div class="card">
+                <div class="avatar">
+                    <img src="tx.jpg" alt="头像" />
+                </div>
+                <h1>赵文慧</h1>
+                <p class="birthday">生日：12月23日</p>
+                <p class="hobby">爱好：听歌 🎵</p>
+                <p>欢迎来到我的小宇宙！<br>音乐、光影与文字，记录成长点滴。</p>
+            </div>
+        </section>
+
+        <!-- 音乐 -->
+        <section id="music">
+            <div class="card">
+                <h2>我的歌单</h2>
+                <ul class="song-list" id="songList">
+                    <li>
+                        <div class="cover">☀️</div>
+                        <div class="song-info">
+                            <div class="song-name">两难</div>
+                            <div class="song-artist">加木</div>
+                        </div>
+                        <button class="play-btn" onclick="playSong(0)">▶</button>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 照片墙 -->
+        <section id="gallery">
+            <div class="card">
+                <h2>随手拍</h2>
+                <div class="gallery">
+                    <img src="pic1.jpg" alt="随手拍1" loading="lazy" />
+                    <img src="pic2.jpg" alt="随手拍2" loading="lazy" />
+                    <img src="pic3.jpg" alt="随手拍3" loading="lazy" />
+                    <img src="pic4.jpg" alt="随手拍4" loading="lazy" />
+                </div>
+            </div>
+        </section>
+
+        <!-- 时间轴 -->
+        <section id="timeline">
+            <div class="card">
+                <h2>成长足迹</h2>
+                <div class="timeline">
+                    <div class="event">
+                        <div class="event-date">2025-08-16</div>
+                        <div class="event-desc">在回森上面认识了一位非常好的朋友</div>
+                    </div>
+                    <div class="event">
+                        <div class="event-date">2025-08-17</div>
+                        <div class="event-desc">今天我们聊到凌晨五点</div>
+                    </div>
+                    <div class="event">
+                        <div class="event-date">2025-08-18</div>
+                        <div class="event-desc">给我做了一个个人网站</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 留言板 -->
+        <section id="guestbook">
+            <div class="card">
+                <h2>给我留言</h2>
+                <textarea id="msgInput" placeholder="写下你想对我说的话..."></textarea>
+                <button onclick="addMessage()">发送</button>
+                <div id="messages"></div>
+            </div>
+        </section>
+
+        <!-- 底部播放器 -->
+        <div class="player-bar">
+            <button id="playBtn">⏯</button>
+            <span id="playerTitle">暂无播放</span>
+            <div class="progress" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <button onclick="changeVolume()">🔊</button>
+        </div>
+    </div>
+
+    <!-- 背景音乐（两难直链） -->
+    <audio id="bgMusic" preload="auto">
+        <source src="https://music.163.com/song/media/outer/url?id=2163210456.mp3" type="audio/mpeg">
+        您的浏览器不支持 audio 标签
+    </audio>
+
+    <script>
+        /* ---------- 密码 ---------- */
+        function checkPassword() {
+            const val = document.getElementById('passwordInput').value;
+            if (val === 'wenhui') {
+                document.getElementById('passwordModal').style.display = 'none';
+                playMusic();
+            } else {
+                alert('密码错误！');
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+        document.getElementById('passwordInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') checkPassword();
+        });
+
+        /* ---------- 导航高亮 ---------- */
+        const links = document.querySelectorAll('nav a');
+        const sections = document.querySelectorAll('section');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    links.forEach(l => l.classList.remove('active'));
+                    document.querySelector(`nav a[href="#${entry.target.id}"]`).classList.add('active');
+                }
+            });
+        }, { threshold: 0.5 });
+        sections.forEach(sec => observer.observe(sec));
+
+        /* ---------- 音乐 ---------- */
+        const playlist = [{ name: '两难', artist: '加木', cover: '☀️' }];
+        const audio = document.getElementById('bgMusic');
+        const playBtn = document.getElementById('playBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressContainer = document.getElementById('progressContainer');
+        const playerTitle = document.getElementById('playerTitle');
+
+        function playMusic() {
+            audio.volume = 0.3;
+            audio.play().catch(() => {});
+            playerTitle.textContent = `${playlist[0].name} - ${playlist[0].artist}`;
+        }
+
+        function playSong(idx) {
+            playerTitle.textContent = `${playlist[idx].name} - ${playlist[idx].artist}`;
+            audio.currentTime = 0;
+            audio.play().catch(() => {});
+        }
+
+        /* 播放/暂停按钮 */
+        playBtn.addEventListener('click', () => {
+            if (audio.paused) audio.play().catch(() => {});
+            else audio.pause();
+        });
+
+        /* 播放状态切换按钮文字 */
+        audio.addEventListener('play', () => playBtn.textContent = '⏸');
+        audio.addEventListener('pause', () => playBtn.textContent = '⏯');
+
+        /* 进度条实时更新 */
+        audio.addEventListener('timeupdate', () => {
+            const percent = (audio.currentTime / audio.duration) * 100 || 0;
+            progressBar.style.width = percent + '%';
+        });
+
+        /* 点击进度条跳转 */
+        progressContainer.addEventListener('click', e => {
+            const rect = progressContainer.getBoundingClientRect();
+            audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+        });
+
+        /* 拖拽进度条 */
+        let isDragging = false;
+        progressContainer.addEventListener('mousedown', () => isDragging = true);
+        window.addEventListener('mouseup', () => isDragging = false);
+        window.addEventListener('mousemove', e => {
+            if (!isDragging) return;
+            const rect = progressContainer.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = Math.max(0, Math.min(percent, 1)) * audio.duration;
+        });
+        /* 触摸设备 */
+        progressContainer.addEventListener('touchstart', () => isDragging = true);
+        window.addEventListener('touchend', () => isDragging = false);
+        window.addEventListener('touchmove', e => {
+            if (!isDragging) return;
+            const rect = progressContainer.getBoundingClientRect();
+            const percent = (e.touches[0].clientX - rect.left) / rect.width;
+            audio.currentTime = Math.max(0, Math.min(percent, 1)) * audio.duration;
+        });
+
+        /* 音量切换 */
+        let vol = 0.3;
+        function changeVolume() {
+            vol = vol === 0.3 ? 0.6 : vol === 0.6 ? 1 : 0.3;
+            audio.volume = vol;
+        }
+
+        /* ---------- 留言板 ---------- */
+        function addMessage() {
+            const val = document.getElementById('msgInput').value.trim();
+            if (!val) return;
+            const box = document.getElementById('messages');
+            const p = document.createElement('p');
+            p.textContent = val;
+            box.prepend(p);
+            document.getElementById('msgInput').value = '';
+            localStorage.setItem('messages', box.innerHTML);
+        }
+        (() => {
+            const saved = localStorage.getItem('messages');
+            if (saved) document.getElementById('messages').innerHTML = saved;
+        })();
+    </script>
+</body>
+</html>
